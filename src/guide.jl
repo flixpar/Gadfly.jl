@@ -665,23 +665,24 @@ struct YTicks <: Gadfly.GuideElement
     label::Bool
     ticks::Union{(Nothing), Symbol, AbstractArray}
     orientation::Symbol
+    side::Symbol
 
-    function YTicks(label, ticks, orientation)
+    function YTicks(label, ticks, orientation, side)
         isa(ticks, Symbol) && ticks != :auto &&
                 error("$(ticks) is not a valid value for the `ticks` parameter")
-        new(label, ticks, orientation)
+        new(label, ticks, orientation, side)
     end
 end
 
-YTicks(; label=true, ticks=:auto, orientation=:horizontal) = YTicks(label, ticks, orientation)
+YTicks(; label=true, ticks=:auto, orientation=:horizontal, side=:left) = YTicks(label, ticks, orientation, side)
 
 """
-    Guide.yticks[(; label=true, ticks=:auto, orientation=:horizontal)]
-    Guide.yticks(ticks, label, orientation)
+    Guide.yticks[(; label=true, ticks=:auto, orientation=:horizontal, side=:left)]
+    Guide.yticks(ticks, label, orientation, side)
 
 Formats the tick marks and labels for the y-axis.  `label` toggles the label
 visibility.  `ticks` can also be an array of locations, or `nothing`.
-`orientation` can also be `:auto` or `:vertical`.
+`orientation` can also be `:auto` or `:vertical`.  `side` can be `:left` or `:right`.
 """
 const yticks = YTicks
 
@@ -842,8 +843,15 @@ function render(guide::YTicks, theme::Gadfly.Theme,
         error("$(guide.layout) is not a valid orientation for Guide.yticks")
     end
 
-    return [PositionedGuide(contexts, 10,
-                            left_guide_position),
+    if guide.side == :left
+        guide_pos = left_guide_position
+    elseif guide.side == :right
+        guide_pos = right_guide_position
+    else
+        error("invalid yticks side: $(guide.side)")
+    end
+
+    return [PositionedGuide(contexts, 10, guide_pos),
             PositionedGuide([grid_lines], 0, under_guide_position)]
 end
 
